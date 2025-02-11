@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wisata Asia AR/VR Experience</title>
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Arial", sans-serif;
+      }
+
+      #landing-page {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #764eb7, #472ba1, #008e98, #008f7a);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .mode-buttons {
+        display: flex;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .mode-button {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #1a2a6c;
+        font-size: 18px;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .mode-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Updated home button styling */
+      #home-button {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 30px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        z-index: 1001;
+        transition: all 0.3s ease;
+        display: none; /* Hidden by default */
+      }
+
+      #home-button:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: translateX(-50%) scale(1.05);
+      }
+
+      /* Updated info panel styling */
+      .landmark-info {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        max-width: 300px;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .landmark-info h3 {
+        margin: 0 0 10px 0;
+        color: #fdbb2d;
+      }
+
+      .landmark-info p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        color: white;
+        font-size: 24px;
+      }
+
+      /* Added animation for info panel */
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .landmark-info {
+        animation: slideIn 0.5s ease-out;
+      }
+
+      /* VR cursor style */
+      .vr-cursor {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 0, 0.7);
+        border: 2px solid yellow;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Landing Page -->
+    <div id="landing-page">
+      <h1>Selamat Datang di Wisata Asia</h1>
+      <p>Pilih mode eksplorasi Anda:</p>
+      <div class="mode-buttons">
+        <button class="mode-button" onclick="startAR()">Mode AR</button>
+        <button class="mode-button" onclick="startVR()">Mode VR</button>
+      </div>
+    </div>
+
+    <!-- VR Cursor -->
+    <div id="vr-cursor" class="vr-cursor"></div>
+
+    <!-- Persistent Home Button -->
+    <button id="home-button" onclick="returnToHome()">Kembali ke Menu</button>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="display: none">
+      <div>Loading... Please wait</div>
+    </div>
+
+    <!-- Main Scene -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      <!-- Marker Gunung Fuji -->
+      <a-marker
+        type="pattern"
+        url="patt/pattern-GunungFuji.patt"
+        data-landmark="Gunung Fuji"
+        emitevents="true"
+      >
+        <a-entity
+          gltf-model="url(models/mount_fuji.glb)"
+          scale="0.7 0.7 0.7"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
+        ></a-entity>
+        <a-text
+          value="Gunung Fuji"
+          position="0 1 0"
+          align="center"
+          color="#FFF"
+          scale="2 2 2"
+        ></a-text>
+      </a-marker>
+
+      <!-- Marker Taj Mahal -->
+      <a-marker
+        type="pattern"
+        url="patt/pattern-TajMahal.patt"
+        data-landmark="Taj Mahal"
+        emitevents="true"
+      >
+        <a-entity
+          gltf-model="url(models/taj_mahal.glb)"
+          scale="0.010 0.010 0.010"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
+        ></a-entity>
+        <a-text
+          value="Taj Mahal"
+          position="0 2 0"
+          align="center"
+          color="#FFF"
+          scale="2 2 2"
+        ></a-text>
+      </a-marker>
+
+      <!-- Marker Candi Borobudur-->
+      <a-marker
+        type="pattern"
+        url="patt/pattern-CandiBorobudur.patt"
+        data-landmark="Candi Borobudur"
+        emitevents="true"
+      >
+        <a-entity
+          gltf-model="url(models/canditemple_low_poly.glb)"
+          scale="0.01 0.01 0.01"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
+        ></a-entity>
+        <a-text
+          value="Candi Borobudur"
+          position="0 1 0"
+          align="center"
+          color="#FFF"
+          scale="2 2 2"
+        ></a-text>
+      </a-marker>
+
+      <!-- Marker Petronas Twins Tower-->
+      <a-marker
+        type="pattern"
+        url="patt/pattern-PetronasTower.patt"
+        data-landmark="Petronas Twins Tower"
+        emitevents="true"
+      >
+        <a-entity
+          gltf-model="url(models/petronastower.glb)"
+          scale="0.15 0.15 0.15"
+          position="0 3 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
+        ></a-entity>
+        <a-text
+          value="Petronas Twins Tower"
+          position="0 0 0"
+          align="center"
+          color="#FFF"
+          scale="2 2 2"
+        ></a-text>
+      </a-marker>
+
+      <!-- Marker Pagoda Shwedagon -->
+      <a-marker
+        type="pattern"
+        url="patt/pattern-PagodaMyanmar.patt"
+        data-landmark="Pagoda Shwedagon"
+        emitevents="true"
+      >
+        <a-entity
+          gltf-model="url(models/pagoda.glb)"
+          scale="0.08 0.08 0.08"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
+        ></a-entity>
+        <a-text
+          value="Pagoda Shwedagon"
+          position="0 2 0"
+          align="center"
+          color="#FFF"
+          scale="2 2 2"
+        ></a-text>
+      </a-marker>
+
+      <!-- Camera with cursor for both AR and VR -->
+      <a-entity camera look-controls wasd-controls position="0 2 0">
+        <a-cursor
+          id="cursor"
+          color="yellow"
+          animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150; startEvents: click"
+          animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500; startEvents: fusing"
+          raycaster="objects: .clickable"
+          cursor="fuse: true; fuseTimeout: 1500"
+        ></a-cursor>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      const landmarks = {
+        "Gunung Fuji": {
+          title: "Gunung Fuji",
+          description:
+            "Gunung Fuji, yang terletak di pulau Honshu, memiliki ketinggian 3.776,24 meter (12.389,2 kaki). Gunung Fuji terletak sekitar 100 km (62 mil) barat daya Tokyo, dan merupakan gunung berapi aktif yang terakhir meletus dari tahun 1707 hingga 1708.Gunung ini adalah gunung berapi tertinggi kedua di sebuah pulau di benua Asia (setelah Gunung Kerinci di Pulau Sumatra) dan puncak tertinggi ketujuh dari sebuah pulau di Bumi. Kerucut Gunung Fuji sangat simetris, dan salju menutupinya selama sekitar lima bulan setiap tahunnya. Gunung ini dianggap sebagai simbol budaya Jepang, sering digambarkan dalam seni dan fotografi, dan sering dikunjungi oleh wisatawan dan pendaki.",
+        },
+        "Taj Mahal": {
+          title: "Taj Mahal",
+          description:
+            "Taj Mahal sebuah karya seni yang tiada duanya. Terletak di tepian Sungai Yamuna. Taj Mahal dibangun pada tahun 1631 M di tepi Sungai Yamuna, tepat Mumtaz Mahal meninggal. Butuh waktu 22 tahun untuk membangunnya dan terdapat 20.000 pekerja di gedung ini. Taj Mahal menawarkan pemandangan menakjubkan terutama saat matahari terbit atau terbenam. Kisah cinta Shah Jahan dan Mumtaz Mahal telah menginspirasi jutaan orang di seluruh dunia.",
+        },
+        "Candi Borobudur": {
+          title: "Candi Borobudur",
+          description:
+            "Candi Borobudur, yang terletak di Magelang, Jawa Tengah, Indonesia, adalah candi Buddha terbesar di dunia, dibangun pada abad ke-9 oleh Dinasti Sailendra. Candi ini memiliki sembilan tingkat yang melambangkan perjalanan spiritual menuju pencerahan. Dengan lebih dari 500 patung Buddha dan ribuan relief yang menggambarkan ajaran Buddha, Borobudur tidak hanya penting secara religius, tetapi juga menjadi salah satu situs warisan dunia UNESCO yang menawarkan wawasan tentang budaya dan sejarah Indonesia.",
+        },
+        "Petronas Twins Tower": {
+          title: "Petronas Twins Tower",
+          description:
+            "Petronas Twins Tower atau lebih dikenal dengan Menara Petronas, merupakan Lambang Malaysia terletak di Jalan Ampang, KLCC, Kuala Lumpur. Pasangan Menara ini dibangun pada tahun 1992 hingga 1998 dan resmi digunakan pada tahun 1999. Dengan tinggi 88 lantai (425 meter), menara ini merupakan gedung tertinggi hingga tahun 2004dan terhubung dengan jembatan bernama Skybridge yang terletak di lantai 41 dan 42. Itu diambil alih oleh Taipei 101 di Taipei, Taiwan sebagai rekor gedung tertinggi saat ini. Diselenggarakan oleh Burj Khalifa di Dubai, Uni Emirat Arab. Menara Kembar dirancang oleh arsitek Argentina Cesar Pelli.",
+        },
+        "Pagoda Shwedagon": {
+          title: "Pagoda Shwedagon",
+          description:
+            "Pagoda Shwedagon, terletak di Yangon, Myanmar, adalah salah satu pagoda Buddha tertua dan paling penting di dunia, dengan sejarah lebih dari 2.600 tahun. Memiliki kubah emas yang ikonik, pagoda ini dipercaya menyimpan relik-relik suci, termasuk rambut Buddha Gautama. Shwedagon merupakan pusat spiritual dan budaya, menarik ribuan peziarah dan wisatawan. Keindahan arsitektur dan kemegahan relik-reliknya menjadikan Shwedagon simbol perdamaian dan penghubung antara umat Buddha dengan warisan spiritual mereka.",
+        },
+      };
+
+      let currentInfoPanel = null;
+
+      function createInfoPanel(landmarkId) {
+        if (currentInfoPanel) {
+          currentInfoPanel.remove();
+        }
+
+        const landmark = landmarks[landmarkId];
+        if (!landmark) return;
+
+        const infoPanel = document.createElement("div");
+        infoPanel.className = "landmark-info";
+        infoPanel.innerHTML = `
+          <h3>${landmark.title}</h3>
+          <p>${landmark.description}</p>
+        `;
+
+        document.body.appendChild(infoPanel);
+        currentInfoPanel = infoPanel;
+      }
+
+      // Mode handlers with fixed home button
+      function startAR() {
+        document.querySelector("#landing-page").style.display = "none";
+        document.querySelector("#home-button").style.display = "block";
+        document.querySelector("#vr-cursor").style.display = "none";
+      }
+
+      function startVR() {
+        document.querySelector("#landing-page").style.display = "none";
+        document.querySelector("#home-button").style.display = "block";
+        document.querySelector("#vr-cursor").style.display = "block";
+        AFRAME.scenes[0].enterVR();
+      }
+
+      function returnToHome() {
+        window.location.reload();
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        // Hide home button initially
+        document.querySelector("#home-button").style.display = "none";
+
+        // Add marker event listeners
+        document.querySelectorAll("a-marker").forEach((marker) => {
+          marker.addEventListener("markerFound", () => {
+            const landmarkId = marker.getAttribute("data-landmark");
+            createInfoPanel(landmarkId);
+          });
+
+          marker.addEventListener("markerLost", () => {
+            if (currentInfoPanel) {
+              currentInfoPanel.remove();
+              currentInfoPanel = null;
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
